@@ -8,7 +8,6 @@ import time
 from datetime import datetime
 
 import crayons
-import minibar
 import requests
 
 
@@ -25,8 +24,10 @@ class Configuration:
         self.country_code = config.get("country_code")
         self.device_family = config.get("device_family")
         self.zip_code = config.get("zip_code", [])
-        self.selected_device_models = config.get("models", [])
-        self.selected_carriers = config.get("carriers", [])
+        # self.selected_device_models = config.get("models", [])
+        self.selected_device_colors = config.get("colors", [])
+        self.selected_device_capacity = config.get("capacity", [])
+        # self.selected_carriers = config.get("carriers", [])
         self.selected_stores = config.get("stores", [])
         # Store numbers are available here.
         self.appointment_stores = config.get("appointment_stores", [])
@@ -44,6 +45,7 @@ class StoreChecker:
     # End point for searching for pickup state of a certain model at a certain
     # location.
     PRODUCT_AVAILABILITY_URL = "{0}shop/retail/pickup-message?pl=true&parts.0={1}&location={2}"
+    PRODUCT_AVAILABILITY_URL = "{0}shop/fulfillment-messages?pl=true&mt=compact&parts.0={1}VC/A&searchNearby=true&location={2}"
     # URL for the store availabile
     STORE_APPOINTMENT_AVAILABILITY_URL = (
         "https://retail-pz.cdn-apple.com/product-zone-prod/availability/{0}/{1}/availability.json"
@@ -60,10 +62,12 @@ class StoreChecker:
         # the URL for country == US.
         if self.configuration.country_code.upper() != "US":
             self.base_url = self.APPLE_BASE_URL.format(self.configuration.country_code)
+        print("Checking", self.base_url)
 
     def refresh(self):
         """Refresh information about the stock that is available on the Apple website."""
         device_list = self.find_devices()
+        print(device_list)
         # Exit if no device was found.
         if not device_list:
             print("{}".format(crayons.red("✖  No device matching your configuration was found!")))
@@ -79,7 +83,7 @@ class StoreChecker:
         print("{}".format(crayons.blue("➜  Downloading Stock Information for the devices...\n")))
 
         self.stores_list_with_stock = {}
-        for device in minibar.bar(device_list):
+        for device in device_list:
             self.check_stores_for_device(device)
 
         # Get all the stores and sort it by the sequence.
@@ -143,7 +147,7 @@ class StoreChecker:
         )
 
         if product_locator_response.status_code != 200 or product_locator_response.json() is None:
-            print("----> HERE" + device_list)
+            print("----> HERE" + str(device_list))
             return []
 
         try:
@@ -154,20 +158,26 @@ class StoreChecker:
                 .get("productLocatorMeta")
                 .get("products")
             )
+            # print(len(product_list))
             # Take out the product list and extract only the useful
             # information.
             for product in product_list:
-                model = product.get("partNumber")
-                carrier = product.get("carrierModel")
+                # print(product)
+                model_name = product.get("productTitle").replace("\xa0", " ")
+                model = product.get("basePartNumber")
+                capacity = product.get("dimensionCapacity")
+                color = product.get("dimensionColor")
+                price = product.get("price")
+                # carrier = product.get("carrierModel")
                 # Only add the requested models and requested carriers (device
                 # models are partially matched)
                 if (
-                    any(item in model for item in self.configuration.selected_device_models)
-                    or len(self.configuration.selected_device_models) == 0
-                ) and (
-                    carrier in self.configuration.selected_carriers or len(self.configuration.selected_carriers) == 0
+                    # any(item in model for item in self.configuration.selected_device_models)
+                    capacity in self.configuration.selected_device_capacity
+                    and color in self.configuration.selected_device_colors
+                    # or len(self.configuration.selected_device_models) == 0
                 ):
-                    device_list.append({"title": product.get("productTitle"), "model": model, "carrier": carrier})
+                    device_list.append({"title": model_name, "model": model, "color": color, "capacity":capacity, "price":price})
 
         except BaseException:
             print("{}".format(crayons.red("✖  Failed to find the device family")))
@@ -179,10 +189,12 @@ class StoreChecker:
 
     def check_stores_for_device(self, device):
         """Find all stores that have the device requested available (does not matter if it's in stock or not)."""
+        # print(self.PRODUCT_AVAILABILITY_URL.format(self.base_url, device.get("model"), self.configuration.zip_code))
         product_availability_response = requests.get(
             self.PRODUCT_AVAILABILITY_URL.format(self.base_url, device.get("model"), self.configuration.zip_code)
         )
-        store_list = product_availability_response.json().get("body").get("stores")
+        store_list = product_availability_response.json().get("body").get("content").get("pickupMessage").get("stores")
+        # print("All stores available ", store_list)
         # Go through all the stores in the list and extract useful information.
         # Group products by store (put the stock for this device in the store's
         # parts attribute)
@@ -240,4 +252,7 @@ class StoreChecker:
 
 if __name__ == "__main__":
     store_checker = StoreChecker()
-    store_checker.refresh()
+    while True:
+        print(datetime.now())
+        store_checker.refresh()
+        time.sleep(15)
