@@ -25,6 +25,7 @@ class Configuration:
         self.device_family = config.get("device_family")
         self.zip_code = config.get("zip_code", [])
         # self.selected_device_models = config.get("models", [])
+        self.selected_if_max = config.get("max")
         self.selected_device_colors = config.get("colors", [])
         self.selected_device_capacity = config.get("capacity", [])
         # self.selected_carriers = config.get("carriers", [])
@@ -164,6 +165,9 @@ class StoreChecker:
             for product in product_list:
                 # print(product)
                 model_name = product.get("productTitle").replace("\xa0", " ")
+                if self.configuration.selected_if_max != "Max" in model_name:
+                    continue
+
                 model = product.get("basePartNumber")
                 capacity = product.get("dimensionCapacity")
                 color = product.get("dimensionColor")
