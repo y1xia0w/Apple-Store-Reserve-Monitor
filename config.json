@@ -1,9 +1,7 @@
 {
-  "country_code": "de",
-  "device_family": "iphone_12_mini",
-  "zip_code": "10369",
-  "models": ["MGJ53ZD/A"],
-  "carriers": ["TMOBILE/US", "SPRINT/US", "ATT/US"],
-  "stores": ["R462"],
-  "appointment_stores": ["R358", "R462"]
-}
+  "country_code": "ca_edu_93120",
+  "device_family": "iphone13pro",
+  "zip_code": "V6Y2B6",
+  "colors": ["sierrablue", "silver"],
+  "capacity": ["512gb"]
+  }
