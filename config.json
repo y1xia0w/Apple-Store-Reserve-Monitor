@@ -1,6 +1,7 @@
 {
   "country_code": "ca_edu_93120",
   "device_family": "iphone13pro",
+  "max": 0,
   "zip_code": "V6Y2B6",
   "colors": ["sierrablue", "silver"],
   "capacity": ["512gb"]
