@@ -1,5 +1,10 @@
 # Apple Store Reserve Monitor
 
+# Updated for iPhone 13/13Pro series!
+# Tested in Canada
+Set your favored color and capacity in the config.json along with post code.
+
+---
 ## Supports all iPhone, iPad, and Apple Watch
 #### Including iPhone 11 Pro, iPhone 11, iPad 11 Pro, iPad Air 2019
 #### Now also check appointment availability due to COVID-19 store entry restrictions
